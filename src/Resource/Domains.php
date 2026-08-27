@@ -1,0 +1,114 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Mailtea\Resource;
+
+use Mailtea\Internal\Params;
+use Mailtea\Internal\Requester;
+
+/**
+ * Sending domains. Reach it at `$mailtea->domains`.
+ *
+ * Scoped to a publication — every call carries a `publication_id`. Register a
+ * domain, add the DNS `records` the response lists, then {@see self::verify()}
+ * it before sending from it.
+ */
+final class Domains
+{
+    /** Tracking sub-domains (CNAME) under a domain. */
+    public readonly TrackingDomains $tracking;
+
+    public function __construct(private readonly Requester $api)
+    {
+        $this->tracking = new TrackingDomains($api);
+    }
+
+    /**
+     * Register a domain. The response `records` lists the DNS records to add.
+     *
+     * @param array<string, mixed> $params
+     *
+     * @return array<string, mixed>
+     */
+    public function create(array $params): array
+    {
+        /** @var array<string, mixed> */
+        return $this->api->request('POST', '/v1/domains', $params);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     *
+     * @return array<string, mixed>
+     */
+    public function list(array $params = []): array
+    {
+        /** @var array<string, mixed> */
+        return $this->api->request('GET', '/v1/domains' . Params::query($params));
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     *
+     * @return array<string, mixed>
+     */
+    public function get(string $id, array $params = []): array
+    {
+        /** @var array<string, mixed> */
+        return $this->api->request(
+            'GET',
+            '/v1/domains/' . Params::segment($id) . Params::query($params)
+        );
+    }
+
+    /**
+     * Verify a domain against its DNS records; `status` becomes `verified`.
+     *
+     * @param array<string, mixed> $params
+     *
+     * @return array<string, mixed>
+     */
+    public function verify(string $id, array $params = []): array
+    {
+        /** @var array<string, mixed> */
+        return $this->api->request(
+            'POST',
+            '/v1/domains/' . Params::segment($id) . '/verify' . Params::query($params)
+        );
+    }
+
+    /**
+     * Update a domain — tracking settings, or `custom_return_path` to delegate a
+     * subdomain as the envelope sender so SPF aligns with your own domain. Mail
+     * keeps sending on the default return-path until the delegated DNS resolves.
+     *
+     * @param array<string, mixed> $params
+     *
+     * @return array<string, mixed>
+     */
+    public function update(string $id, array $params): array
+    {
+        /** @var array<string, mixed> */
+        return $this->api->request(
+            'PATCH',
+            '/v1/domains/' . Params::segment($id)
+                . Params::query(['publication_id' => $params['publication_id'] ?? null]),
+            $params
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     *
+     * @return array<string, mixed>
+     */
+    public function delete(string $id, array $params = []): array
+    {
+        /** @var array<string, mixed> */
+        return $this->api->request(
+            'DELETE',
+            '/v1/domains/' . Params::segment($id) . Params::query($params)
+        );
+    }
+}

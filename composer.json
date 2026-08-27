@@ -1,0 +1,29 @@
+{
+  "name": "mailtea/mailtea",
+  "description": "The official PHP SDK for Mailtea — send, schedule, and manage email from your app or AI agent.",
+  "type": "library",
+  "license": "MIT",
+  "homepage": "https://mailtea.app",
+  "keywords": ["mailtea", "email", "transactional-email", "sdk", "newsletter", "webhooks"],
+  "support": {
+    "docs": "https://docs.mailtea.app",
+    "issues": "https://github.com/mailtea-app/mailtea-php/issues",
+    "source": "https://github.com/mailtea-app/mailtea-php"
+  },
+  "require": {
+    "php": ">=8.1",
+    "ext-curl": "*",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Mailtea\\": "src/"
+    }
+  },
+  "scripts": {
+    "test": "php tests/run.php"
+  },
+  "config": {
+    "sort-packages": true
+  }
+}

@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Lets a run be re-triggered from the Actions tab without a new commit.
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      # 8.1 is the floor composer.json declares and 8.4 is current; a syntax or
+      # stdlib call that only exists on one of them fails here, not for a user.
+      matrix:
+        php-version: ["8.1", "8.4"]
+    name: Tests (PHP ${{ matrix.php-version }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: curl, json
+      - name: Validate composer.json
+        run: composer validate --strict
+      # No dependencies to install: the SDK has none, and the tests use no
+      # framework. This only writes the PSR-4 autoloader.
+      - run: composer install --no-interaction --no-progress
+      - run: composer test
