@@ -10,13 +10,6 @@ over the [REST API](https://docs.mailtea.app/docs/api-reference). PHP 8.1+,
 composer require mailtea/mailtea
 ```
 
-Not on Packagist yet? Point Composer at the repository:
-
-```bash
-composer config repositories.mailtea vcs https://github.com/mailtea-app/mailtea-php
-composer require mailtea/mailtea:^0.1
-```
-
 There is nothing to compile and nothing to autoload but this package, so a
 project that does not use Composer can `require` the sources directly — see
 [Local development](#local-development).
