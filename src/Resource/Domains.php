@@ -13,15 +13,22 @@ use Mailtea\Internal\Requester;
  * Scoped to a publication — every call carries a `publication_id`. Register a
  * domain, add the DNS `records` the response lists, then {@see self::verify()}
  * it before sending from it.
+ *
+ * {@see self::create()} takes `region` (fixed at creation), `tls` and
+ * `tracking_subdomain`; {@see self::list()} filters on `region` and `status`.
  */
 final class Domains
 {
     /** Tracking sub-domains (CNAME) under a domain. */
     public readonly TrackingDomains $tracking;
 
+    /** Domain claims — take a domain back from another publication. */
+    public readonly DomainClaims $claims;
+
     public function __construct(private readonly Requester $api)
     {
         $this->tracking = new TrackingDomains($api);
+        $this->claims = new DomainClaims($api);
     }
 
     /**
@@ -82,6 +89,15 @@ final class Domains
      * Update a domain — tracking settings, or `custom_return_path` to delegate a
      * subdomain as the envelope sender so SPF aligns with your own domain. Mail
      * keeps sending on the default return-path until the delegated DNS resolves.
+     *
+     * `'tracking_subdomain' => null` removes a tracking subdomain: the domain's
+     * links go back to being served from the Mailtea host, and links in mail
+     * already sent point at the old hostname and stop resolving. The params
+     * array is encoded as given, so the null reaches the wire as a JSON null —
+     * leaving the key out (leave the subdomain alone) and passing null (remove
+     * it) are different requests. An empty string is neither; it is refused
+     * with `tracking_subdomain_invalid`. null is an update-only value: a create
+     * has nothing to clear.
      *
      * @param array<string, mixed> $params
      *

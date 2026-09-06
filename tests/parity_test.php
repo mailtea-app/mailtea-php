@@ -35,6 +35,8 @@ $referencePaths = [
     '/v1/contacts/',
     '/v1/domains',
     '/v1/domains/',
+    '/v1/domains/claim',
+    '/v1/domains/claims/',
     '/v1/emails',
     '/v1/emails/',
     '/v1/emails/analytics',
@@ -97,10 +99,10 @@ test('the SDK reaches every endpoint the reference SDK reaches', function () use
     assertSame([], $missing, 'endpoints the reference SDK has and this one does not');
 });
 
-test('the reference set is the 35 prefixes it is supposed to be', function () use ($referencePaths): void {
+test('the reference set is the 37 prefixes it is supposed to be', function () use ($referencePaths): void {
     // A guard on the guard: if someone trims the list above to make the test
     // pass, the count says so.
-    assertSame(35, count($referencePaths), 'reference endpoint count');
+    assertSame(37, count($referencePaths), 'reference endpoint count');
     assertSame($referencePaths, array_values(array_unique($referencePaths)), 'no duplicates');
 });
 
@@ -138,4 +140,5 @@ test('every resource on the client is reachable and typed', function () use ($ma
         'emails->inbound->attachments'
     );
     assertTrue($mailtea->domains->tracking instanceof Mailtea\Resource\TrackingDomains, 'domains->tracking');
+    assertTrue($mailtea->domains->claims instanceof Mailtea\Resource\DomainClaims, 'domains->claims');
 });

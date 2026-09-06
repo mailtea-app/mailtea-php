@@ -2,6 +2,30 @@
 
 All notable changes to the `mailtea/mailtea` PHP package are documented here.
 
+## Unreleased
+
+- Added: `$mailtea->domains->update()` with `'tracking_subdomain' => null`
+  removes a tracking subdomain. The domain's links go back to being served from
+  the Mailtea host. Links in mail you have already sent point at the old
+  hostname and stop resolving — there is no way to reinstate them. The params
+  array is encoded as given, so the null reaches the wire; leaving the key out
+  and passing null are different requests. An empty string is neither: it is
+  refused with `tracking_subdomain_invalid`.
+- Changed: the `MX` row in `records` now reports what the last verify found,
+  instead of reading `pending` on every request but the verify itself. A domain
+  nobody has verified reads `not_started`.
+
+## 0.2.0 (2026-09-03)
+
+- Added: the domain claims resource — `$mailtea->domains->claims->create()`,
+  `->get()`, `->verify()` and `->cancel()`. When adding a domain is refused
+  because the host is connected to another publication, publish one TXT record
+  to prove you control its DNS and the domain moves to you.
+- Documented: domains take `region` (fixed at creation), `tls` and
+  `tracking_subdomain` on create, and the list filters on `region` and `status`.
+  This SDK forwards whatever parameters you pass, so these worked already — this
+  release is where they are stated and covered by tests.
+
 ## 0.1.0 (2026-08-27)
 
 First release. The official PHP SDK for Mailtea — a thin, typed wrapper over the

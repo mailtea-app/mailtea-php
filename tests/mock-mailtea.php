@@ -100,6 +100,36 @@ function entity(string $type, string $id, array $extra = []): array
     return ['object' => $type, 'id' => $id, ...$extra];
 }
 
+/**
+ * A domain claim, in the shape `apps/api/src/domain-claims-rest.ts` returns:
+ * the TXT record to publish lives in `records`, never in a bare `txt` field.
+ *
+ * @return array<string, mixed>
+ */
+function domainClaim(string $id, string $status = 'pending', ?string $domainId = null): array
+{
+    $completed = $status === 'completed';
+
+    return entity('domain_claim', $id, [
+        'publication_id' => 'pub_1',
+        'name' => 'acme.com',
+        'region' => 'eu-west-1',
+        'status' => $status,
+        'records' => [[
+            'record' => 'Claim',
+            'type' => 'TXT',
+            'name' => '_mailtea-claim.acme.com',
+            'value' => 'mailtea-claim=' . $id,
+            'status' => $completed ? 'verified' : 'pending',
+        ]],
+        'failure_reason' => null,
+        'domain_id' => $domainId,
+        'created_at' => '2026-09-01T00:00:00.000Z',
+        'expires_at' => $completed ? null : '2026-09-08T00:00:00.000Z',
+        'completed_at' => $completed ? '2026-09-01T00:10:00.000Z' : null,
+    ]);
+}
+
 // Auth is checked first, the same way the real API does it — a client that
 // forgets the key should fail its test, not silently "send".
 $authorization = $headers['authorization'] ?? null;
@@ -282,6 +312,18 @@ $routes = [
     ['DELETE', '#^/v1/assets/([^/]+)$#', static fn (array $m) => reply(200, entity('asset', $m[1], ['deleted' => true]))],
 
     // --- domains -----------------------------------------------------------
+    // Claims sit above the parameterised domain routes: `/v1/domains/claim` is a
+    // fixed path, and `/v1/domains/claims/{id}` is a level deeper than
+    // `/v1/domains/{id}`.
+    ['POST', '#^/v1/domains/claim$#', static fn () => reply(200, domainClaim('clm_1'))],
+    ['GET', '#^/v1/domains/claims/([^/]+)$#', static fn (array $m) => reply(200, domainClaim($m[1]))],
+    // Verify answers with the claim AND the domain it produced, so the claimant
+    // can publish its DNS without a second request.
+    ['POST', '#^/v1/domains/claims/([^/]+)/verify$#', static fn (array $m) => reply(200, [
+        ...domainClaim($m[1], 'completed', 'dom_2'),
+        'domain' => entity('domain', 'dom_2', ['status' => 'pending', 'records' => []]),
+    ])],
+    ['DELETE', '#^/v1/domains/claims/([^/]+)$#', static fn (array $m) => reply(200, entity('domain_claim', $m[1], ['deleted' => true]))],
     ['POST', '#^/v1/domains$#', static fn () => reply(200, entity('domain', 'dom_1', ['records' => []]))],
     ['GET', '#^/v1/domains$#', static fn () => reply(200, cursorList())],
     ['POST', '#^/v1/domains/([^/]+)/verify$#', static fn (array $m) => reply(200, entity('domain', $m[1], ['status' => 'verified']))],
