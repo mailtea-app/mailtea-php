@@ -47,7 +47,7 @@ use Mailtea\Resource\Webhooks;
  */
 final class Mailtea
 {
-    public const VERSION = '0.2.0';
+    public const VERSION = '0.3.0';
 
     public const DEFAULT_BASE_URL = 'https://api.mailtea.app';
 
