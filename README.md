@@ -177,7 +177,7 @@ To change cURL's timeouts without replacing the transport, pass your own:
 | `emails->send($email)` | Send a transactional email → `['id' => …]` |
 | `emails->batch($emails)` | Send up to 100 emails → `['data' => [['id' => …]]]` |
 | `emails->get($id)` | Retrieve an email and its delivery status (adds a `status` alias of `last_event`) |
-| `emails->list($params)` | List emails → `['data', 'total', 'limit', 'offset', 'has_more']` |
+| `emails->list($params)` | List emails → `['data', 'total', 'limit', 'offset', 'has_more']`. Pass `'mode' => 'test'` for test-mode mail |
 | `emails->update($id, $params)` | Reschedule a scheduled email |
 | `emails->reschedule($id, $scheduledAt)` | Convenience wrapper over `update` |
 | `emails->cancel($id)` | Cancel a scheduled email (`POST /cancel` — there is no DELETE) |
@@ -206,7 +206,7 @@ To change cURL's timeouts without replacing the transport, pass your own:
 | `domains->tracking->create / list / verify / delete` | Manage CNAME tracking sub-domains under a domain |
 | `webhooks->create / list / get / update / delete` | Manage outbound event subscriptions |
 | `contactProperties->create / list / update / delete` | Manage custom contact fields (team-scoped) |
-| `apiKeys->create / list / revoke` | Manage API keys (`settings:write`) |
+| `apiKeys->create / list / revoke` | Manage API keys (`settings:write`). `'mode' => 'test'` mints a test key |
 | `automations->create / list / get / update / delete` | Manage automation graphs (`steps` + optional `connections`) |
 | `automations->validate($params)` | Dry-run a graph → `['valid', 'issues']` (no automation needed) |
 | `automations->activate / pause / archive` | Lifecycle (`cancel_runs` defaults **false** on pause, **true** on archive) |
@@ -222,6 +222,35 @@ Audience resources (contacts, segments, topics, senders, templates, domains,
 webhooks, automations, events, assets) are scoped to a publication: pass
 `publication_id`. Suppressions and contact properties are team-scoped and take
 none.
+
+## Test mode
+
+A test key (`mt_test_…`) sends nothing. Every message it creates is validated,
+recorded and emits webhooks, but is never handed to a provider — so CI can point
+at production Mailtea with your real code and your real webhook handler.
+
+```php
+$key = $mailtea->apiKeys->create(['name' => 'CI', 'mode' => 'test']);
+// $key['token'] starts with mt_test_
+
+$test = new Mailtea($key['token']);
+$test->emails->send([
+    'from' => 'you@yourdomain.com',
+    'to' => 'bounced@test.mailtea.email',
+    'subject' => 'Bounce handling',
+    'html' => '<p>Never delivered.</p>',
+]);
+
+$page = $test->emails->list(['mode' => 'test']);
+```
+
+Reserved recipients on `test.mailtea.email` force the outcome — `delivered@`,
+`bounced@`, `complained@`, `delayed@`, `failed@` — and the first `to` recipient
+decides. Every email carries `mode`. A test key reads only test mail and a live
+key only live mail; there is no mixed view.
+
+A test key is **not** a data sandbox. It reads and writes your real contacts,
+templates, senders and webhooks. Only delivery is simulated.
 
 ## Webhooks
 

@@ -106,8 +106,15 @@ final class Emails
     /**
      * List emails, most recent first.
      *
-     * Filters: `status`, `tag_name`, `tag_value`, `search` (substring match on
-     * recipient/sender/subject), `from_date`, `to_date`, `limit`, `offset`.
+     * Filters: `status`, `mode`, `tag_name`, `tag_value`, `search` (substring
+     * match on recipient/sender/subject), `from_date`, `to_date`, `limit`,
+     * `offset`.
+     *
+     * `mode` is `live` or `test` — there is no mixed view. A test key reads only
+     * test mail and a live key only live mail, so this filter matters to a
+     * session-backed credential; asking for the mode your key is not in is an
+     * error rather than an empty list. Every returned email carries its own
+     * `mode`.
      *
      * `from_date` is clamped to the plan's analytics retention window — 30 days
      * on most plans, 90 on Scale and Enterprise. A value reaching further back
