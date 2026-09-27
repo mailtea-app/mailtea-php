@@ -271,14 +271,15 @@ $routes = [
     ['POST', '#^/v1/templates/([^/]+)/unpublish$#', static fn (array $m) => reply(200, entity('template', $m[1], ['status' => 'draft']))],
     ['POST', '#^/v1/templates/([^/]+)/duplicate$#', static fn (array $m) => reply(200, entity('template', 'tpl_copy'))],
     ['GET', '#^/v1/templates/([^/]+)/versions$#', static function (): void {
-        reply(200, ['object' => 'list', 'data' => [['version' => 2, 'is_current' => true]], 'retention' => ['max_versions' => 20]]);
+        reply(200, ['object' => 'list', 'data' => [['version' => 2, 'is_current' => true, 'is_published' => false]], 'retention' => ['max_versions' => 20]]);
     }],
     ['POST', '#^/v1/templates/([^/]+)/versions/([^/]+)/restore$#', static function (array $m): void {
         reply(200, [
             'restored' => true,
             'restored_from_version' => (int) $m[2],
-            'unpublished' => true,
-            'template' => entity('template', $m[1], ['status' => 'draft']),
+            'unpublished' => false,
+            'message' => 'Restored version ' . (int) $m[2] . '. Your changes are saved but not published. Automations and the API keep sending the published version until you publish this template again.',
+            'template' => entity('template', $m[1], ['status' => 'published', 'has_unpublished_versions' => true]),
         ]);
     }],
     ['GET', '#^/v1/templates/([^/]+)$#', static fn (array $m) => reply(200, entity('template', $m[1]))],

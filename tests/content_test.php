@@ -133,11 +133,15 @@ test('templates publish, unpublish and duplicate', function () use ($mailtea, $s
 test('template versions list and restore', function () use ($mailtea, $server): void {
     $versions = $mailtea->templates->versions('tpl_1', ['publication_id' => 'pub_1', 'limit' => 10]);
     assertSame(true, $versions['data'][0]['is_current'], 'is_current');
+    // The working copy is not what is sending while there are unpublished changes.
+    assertSame(false, $versions['data'][0]['is_published'], 'is_published');
     assertRequest($server, 'GET', '/v1/templates/tpl_1/versions', null, 'publication_id=pub_1&limit=10');
 
     $restored = $mailtea->templates->restoreVersion('tpl_1', 2, ['publication_id' => 'pub_1']);
-    // Restoring is a content write, so the template drops back to draft. The
-    // reply says so, and re-publishing is the caller's job.
-    assertSame(true, $restored['unpublished'], 'unpublished');
+    // Restoring no longer unpublishes: the template stays published, and
+    // has_unpublished_versions is what says the restore is not live yet.
+    assertSame(false, $restored['unpublished'], 'unpublished');
+    assertSame(true, $restored['template']['has_unpublished_versions'], 'has_unpublished_versions');
+    assertSame(true, str_contains($restored['message'], 'saved but not published'), 'message');
     assertRequest($server, 'POST', '/v1/templates/tpl_1/versions/2/restore', null, 'publication_id=pub_1');
 });
