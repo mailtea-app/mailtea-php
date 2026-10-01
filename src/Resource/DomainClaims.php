@@ -22,8 +22,10 @@ final class DomainClaims
     }
 
     /**
-     * Open a claim. Takes `publication_id`, `name` and an optional `region`.
-     * The response `records` lists the TXT record to publish.
+     * Open a claim. Takes `publication_id`, `name` and optional `region` and
+     * `purpose` (`email`, `site` or `both`, default `email`): the domain the
+     * claim produces is created with that purpose. The response `records`
+     * lists the TXT record to publish, and every claim carries `purpose`.
      *
      * @param array<string, mixed> $params
      *
